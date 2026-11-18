@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B2K Trading Mini-App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            background-color: #0b0e14;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 12px;
+            padding-bottom: 60px;
+        }
+        h2 { text-align: center; color: #38bdf8; font-size: 18px; margin-bottom: 15px; }
+        .nav-tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 15px;
+        }
+        .tab-btn {
+            flex: 1;
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #94a3b8;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+        }
+        .tab-btn.active {
+            background: #0284c7;
+            color: white;
+            border-color: #38bdf8;
+        }
+        .section { display: none; }
+        .section.active { display: block; }
+        .card {
+            background: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+        .card h3 { margin-top: 0; font-size: 14px; color: #f3f4f6; }
+        select, .btn {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #374151;
+            background: #1f2937;
+            color: white;
+            font-size: 14px;
+            margin-top: 8px;
+            box-sizing: border-box;
+        }
+        .btn {
+            background: #10b981;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+        }
+        .promo-box {
+            background: #1e1b4b;
+            border: 1px solid #312e81;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            color: #818cf8;
+            margin-top: 10px;
+            word-break: break-all;
+        }
+        .signal-display {
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 15px;
+            background: #1f2937;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>⚡ B2K MARKET LAB (S30 & M1) ⚡</h2>
+
+    <!-- Navigation -->
+    <div class="nav-tabs">
+        <div class="tab-btn active" onclick="switchTab('signals', this)">📊 Signaux</div>
+        <div class="tab-btn" onclick="switchTab('autotrade', this)">🚀 Autotrading</div>
+        <div class="tab-btn" onclick="switchTab('account', this)">💎 Compte</div>
+    </div>
+
+    <!-- Section Signaux -->
+    <div id="signals" class="section active">
+        <div class="card">
+            <h3>Sélection de l'Actif</h3>
+            <select id="pairSelect" onchange="updateData()">
+                <option value="BTCUSDT">BTC/USDT</option>
+                <option value="ETHUSDT">ETH/USDT</option>
+                <option value="SOLUSDT">SOL/USDT</option>
+                <option value="BNBUSDT">BNB/USDT</option>
+            </select>
+            
+            <div style="margin-top: 10px; font-size: 13px; color: #94a3b8;">
+                Prix en direct : <span id="priceVal" style="color: #38bdf8; font-weight: bold;">--</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Analyse Timeframe S30 (30 secondes)</h3>
+            <div id="sigS30" class="signal-display">Chargement...</div>
+        </div>
+
+        <div class="card">
+            <h3>Analyse Timeframe M1 (1 minute)</h3>
+            <div id="sigM1" class="signal-display">Chargement...</div>
+        </div>
+    </div>
+
+    <!-- Section Autotrading -->
+    <div id="autotrade" class="section">
+        <div class="card">
+            <h3>Module d'Exécution & Martingale</h3>
+            <p style="font-size: 12px; color: #94a3b8;">Paramétrez vos sessions de test et observez la réaction des indicateurs en temps réel.</p>
+            <button class="btn" onclick="alert('Module de session initialisé.')">▶ Démarrer la session</button>
+        </div>
+    </div>
+
+    <!-- Section Compte & Partenariat -->
+    <div id="account" class="section">
+        <div class="card">
+            <h3>Liaison de Compte & Partenaire</h3>
+            <p style="font-size: 13px; color: #94a3b8;">Rejoignez notre réseau officiel pour débloquer l'accès complet :</p>
+            <a href="https://pocket-friends.co/r/xyzloeradb" target="_blank">
+                <button class="btn" style="background: #2563eb;">🔗 Créer mon compte</button>
+            </a>
+            <div class="promo-box">Code Promo : FRIENDXYZLOERADB</div>
+        </div>
+    </div>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+
+        function switchTab(tabId, element) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            element.classList.add('active');
+        }
+
+        async function updateData() {
+            let pair = document.getElementById('pairSelect').value;
+            try {
+                let res = await fetch(`/api/state?pair=${pair}`);
+                let data = await res.json();
+                
+                document.getElementById('priceVal.innerText = data.price ? data.price.toFixed(2) : "--";
+
+                // Affichage S30
+                let s30 = data.signals.S30;
+                if (s30 && s30.ready) {
+                    let dir = s30.p_up >= 0.5 ? "🟢 CALL (HAUSSE)" : "🔴 PUT (BAISSE)";
+                    document.getElementById('sigS30').innerHTML = `${dir}<br><span style="font-size:11px; color:#94a3b8;">RSI: ${s30.indicators.rsi} | Score: ${(s30.p_up*100).toFixed(1)}%</span>`;
+                } else {
+                    document.getElementById('sigS30').innerHTML = "⏳ Collecte des bougies S30...";
+                }
+
+                // Affichage M1
+                let m1 = data.signals.M1;
+                if (m1 && m1.ready) {
+                    let dir = m1.p_up >= 0.5 ? "🟢 CALL (HAUSSE)" : "🔴 PUT (BAISSE)";
+                    document.getElementById('sigM1').innerHTML = `${dir}<br><span style="font-size:11px; color:#94a3b8;">RSI: ${m1.indicators.rsi} | Score: ${(m1.p_up*100).toFixed(1)}%</span>`;
+                } else {
+                    document.getElementById('sigM1').innerHTML = "⏳ Collecte des bougies M1...";
+                }
+            } catch (err) {
+                console.error("Erreur fetch API", err);
+            }
+        }
+
+        setInterval(updateData, 2000);
+        updateData();
+    </script>
+</body>
+</html>
